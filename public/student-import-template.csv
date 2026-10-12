@@ -1,0 +1,4 @@
+rollNo,name,departmentCode,program,year,section,batch,email,registrationStatus,eligibilityStatus
+SB2026001,Student One,CSE,B.Tech CSE,4,A,2026,sb2026001@siddhartha.edu.in,REGISTERED,ELIGIBLE
+SB2026002,Student Two,ECE,B.Tech ECE,4,B,2026,sb2026002@siddhartha.edu.in,REGISTERED,ELIGIBLE
+SB2026003,Student Three,MECH,B.Tech Mechanical,4,A,2026,sb2026003@siddhartha.edu.in,REGISTERED,NA

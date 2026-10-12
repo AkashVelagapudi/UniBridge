@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLACEMENT_INCHARGE
+  STUDENT
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  NOT_REGISTERED
+}
+
+enum EligibilityStatus {
+  ELIGIBLE
+  NOT_ELIGIBLE
+  NA
+}
+
+enum DriveStatus {
+  PLANNED
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStage {
+  REGISTERED
+  ELIGIBILITY_VERIFIED
+  SHORTLISTED
+  ASSESSMENT_COMPLETED
+  INTERVIEW_IN_PROGRESS
+  SELECTED
+  OFFER_RECEIVED
+  JOINED
+  REJECTED
+  WITHDRAWN
+}
+
+enum ClearanceStatus {
+  PENDING
+  CLEARED
+  NOT_APPLICABLE
+  REJECTED
+}
+
+model User {
+  id                String          @id @default(cuid())
+  email             String          @unique
+  passwordHash      String
+  role              Role
+  student           Student?
+  updatedClearances ClearanceItem[] @relation("ClearanceUpdatedBy")
+}
+
+model Department {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  code     String    @unique
+  students Student[]
+}
+
+model Student {
+  id                 String             @id @default(cuid())
+  userId             String?            @unique
+  user               User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rollNo             String             @unique
+  name               String
+  departmentId       String
+  department         Department         @relation(fields: [departmentId], references: [id])
+  program            String
+  year               Int
+  section            String
+  batch              String
+  email              String             @unique
+  registrationStatus RegistrationStatus
+  eligibilityStatus  EligibilityStatus
+  applications       Application[]
+  clearanceItems     ClearanceItem[]
+
+  @@index([departmentId, batch])
+  @@index([registrationStatus, eligibilityStatus])
+}
+
+model Drive {
+  id                    String        @id @default(cuid())
+  company               String
+  role                  String
+  eligibleDepartmentIds String
+  eligibleBatches       String
+  minCgpa               Float?
+  maxBacklogs           Int?
+  skills                String?
+  registrationDeadline  DateTime
+  stages                String
+  location              String?
+  packageLpa            Float?
+  status                DriveStatus
+  applications          Application[]
+
+  @@index([status, registrationDeadline])
+  @@index([company])
+}
+
+model Application {
+  id              String           @id @default(cuid())
+  studentId       String
+  student         Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  driveId         String
+  drive           Drive            @relation(fields: [driveId], references: [id], onDelete: Cascade)
+  stage           ApplicationStage
+  resultPublished Boolean
+  updatedAt       DateTime         @updatedAt
+  offers          Offer[]
+
+  @@unique([studentId, driveId])
+  @@index([driveId, stage])
+}
+
+model Offer {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  packageLpa    Float
+  published     Boolean
+  offeredAt     DateTime    @default(now())
+
+  @@index([applicationId, published])
+}
+
+model ClearanceCategory {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  mandatory Boolean
+  active    Boolean
+  items     ClearanceItem[]
+}
+
+model ClearanceItem {
+  id                  String            @id @default(cuid())
+  studentId           String
+  student             Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  categoryId          String
+  category            ClearanceCategory @relation(fields: [categoryId], references: [id])
+  status              ClearanceStatus
+  remarks             String?
+  pendingRequirements String?
+  updatedAt           DateTime          @updatedAt
+  updatedById         String?
+  updatedBy           User?             @relation("ClearanceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, categoryId])
+  @@index([categoryId, status])
+}
