@@ -13,6 +13,10 @@
 # testing
 /coverage
 
+# local sqlite database
+/prisma/dev.db
+/prisma/dev.db-journal
+
 # next.js
 /.next/
 /out/
