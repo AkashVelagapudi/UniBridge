@@ -47,3 +47,15 @@ export async function GET() {
     return routeError(error);
   }
 }
+
+function methodNotAllowed() {
+  return NextResponse.json(
+    { error: "Student clearance records are read-only." },
+    { status: 405, headers: { Allow: "GET" } },
+  );
+}
+
+export const POST = methodNotAllowed;
+export const PUT = methodNotAllowed;
+export const PATCH = methodNotAllowed;
+export const DELETE = methodNotAllowed;

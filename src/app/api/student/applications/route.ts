@@ -34,12 +34,31 @@ export async function GET() {
             packageLpa: true,
           },
         },
+        offers: {
+          where: { published: true },
+          select: {
+            id: true,
+            packageLpa: true,
+            offeredAt: true,
+          },
+          orderBy: { offeredAt: "desc" },
+        },
       },
     });
-    return NextResponse.json(applications.map((application) => ({
-      ...application,
-      stage: application.resultPublished ? application.stage : ApplicationStage.REGISTERED,
-    })));
+    return NextResponse.json(applications.map((application) => {
+      const { resultPublished, offers, ...safeApplication } = application;
+      return {
+        ...safeApplication,
+        resultPublished,
+        stage: resultPublished ? application.stage : ApplicationStage.REGISTERED,
+        offers: resultPublished
+          ? offers.map((offer) => ({
+              ...offer,
+              company: application.drive.company,
+            }))
+          : [],
+      };
+    }));
   } catch (error) {
     return routeError(error);
   }
